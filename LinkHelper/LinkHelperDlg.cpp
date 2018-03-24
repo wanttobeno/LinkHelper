@@ -56,10 +56,19 @@ BOOL CLinkHelperDlg::OnInitDialog()
 	
 	// TODO: Add extra initialization here
 	//解除window7以上窗口对该消息的过滤
-#if _MSC_VER  >1200
-	ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
-	ChangeWindowMessageFilter(0x0049, MSGFLT_ADD);// 0x0049 == WM_COPYGLOBALDATA
-#endif //_MSC_VER  <1300
+	typedef BOOL(__stdcall * MsMessageFilter)(UINT message, DWORD dwFlag);
+	HMODULE hMod = LoadLibrary(_T("user32.dll"));
+	if (hMod)
+	{
+		MsMessageFilter  MsChangeWinMessageFilter;
+		MsChangeWinMessageFilter = (MsMessageFilter)GetProcAddress(hMod, "ChangeWindowMessageFilter");
+		if (MsChangeWinMessageFilter)
+		{
+			MsChangeWinMessageFilter(WM_DROPFILES, 1);
+			MsChangeWinMessageFilter(0x0049, 1);// 0x0049 == WM_COPYGLOBALDATA
+		}
+		FreeLibrary(hMod);
+	}
 	
 
 	// 中间置顶显示
