@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "LinkHelper.h"
 #include "DragEdit.h"
 
 #ifdef _DEBUG
@@ -30,13 +29,14 @@ CDragEdit::~CDragEdit()
 
 
 BEGIN_MESSAGE_MAP(CDragEdit, CEdit)
-//{{AFX_MSG_MAP(CDragEdit)
-ON_WM_DROPFILES()
+	//{{AFX_MSG_MAP(CDragEdit)
+	ON_WM_DROPFILES()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CDragEdit message handlers
+#include <malloc.h>
 
 void CDragEdit::OnDropFiles(HDROP hDropInfo) 
 {
@@ -44,18 +44,17 @@ void CDragEdit::OnDropFiles(HDROP hDropInfo)
 	WORD wNumFileDropped = DragQueryFile(hDropInfo, -1, NULL, 0);
 	CString firstFile = _T("");
 	for (WORD x = 0; x < wNumFileDropped; x++){
-		WORD wPathnameSize = DragQueryFile(hDropInfo, x, NULL, 0);
-		TCHAR* npszFile = (TCHAR*)LocalAlloc(LPTR, wPathnameSize += 1);
-		
+		WORD wPathnameSize = DragQueryFile(hDropInfo, x, NULL, 0)+4;
+		TCHAR* npszFile = (TCHAR*)LocalAlloc(LPTR, wPathnameSize*sizeof(TCHAR));
 		if (npszFile == NULL){
 			continue;
 		}
-		
-		DragQueryFile(hDropInfo, x, npszFile, wPathnameSize);
+
+		DragQueryFile(hDropInfo, x, npszFile, wPathnameSize*sizeof(TCHAR));
 		if (firstFile == ""){
 			firstFile = npszFile;
 		}
-		
+
 		LocalFree(npszFile);
 	}
 	DragFinish(hDropInfo);
@@ -72,7 +71,7 @@ BOOL CDragEdit::PreTranslateMessage(MSG* pMsg)
 		m_tipBtnCtr = new CToolTipCtrl;
 		m_tipBtnCtr->Create(this);
 		m_tipBtnCtr->SetDelayTime(100);
-		m_tipBtnCtr->AddTool(this, _T("拖入文件或文件夹"));
+		m_tipBtnCtr->AddTool(this, _T("拖入文件"));
 		m_tipBtnCtr->SetMaxTipWidth(123);
 		m_tipBtnCtr->Activate(TRUE);
 	}
